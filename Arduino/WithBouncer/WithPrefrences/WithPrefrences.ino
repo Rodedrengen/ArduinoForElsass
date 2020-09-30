@@ -25,6 +25,8 @@ partition (3mb no OTA / 1mb SPIFFS)
 //Handle the bluetooth low energy keyboard
 #include <BleKeyboard.h>
 
+#include <Preferences.h>
+
 //Amount of buttons. Max of 8
 #define numberOfButtons 4
 
@@ -216,7 +218,7 @@ uint8_t dats[8] = {
     0, 0, 0, 0, 0, 0, 0, 0};
 
 //The names of the arguments used on the server. 
-const String arguments[8] = {
+String arguments[8] = {
     "stringDat0",
     "stringDat1",
     "stringDat2",
@@ -225,6 +227,18 @@ const String arguments[8] = {
     "stringDat5",
     "stringDat6",
     "stringDat7"};
+
+//Keys to preferences
+const char *keys[8]{
+  "key0",
+  "key1",
+  "key2",
+  "key3",
+  "key4",
+  "key5",
+  "key6",
+  "key7"
+};
 
 //default symbols to be sent with keyboard presses
 uint8_t symbols[8] = {
@@ -272,9 +286,13 @@ String response = "";
 
 bool configureServer = false;
 
+Preferences preferences;
+
 void setup(){
   //Begin serial communication on speed 115200
   Serial.begin(115200);
+
+  preferences.begin("my-app", false);
 
   //Setup Wifi
   WiFi.softAP(ssid, password);
@@ -315,8 +333,10 @@ void setup(){
   delay(1000);
   
   //Server or EEPROM data
-  configureServer = true;
+  configureServer = digitalRead(onOff);
 
+  Serial.println(configureServer);
+  
   configurerEEPROM();
 
   //Total delay 3100 ms
@@ -333,15 +353,18 @@ void loop(){
   }
     
   if (bleKeyboard.isConnected() && !configureServer)    {
+    preferences.end();
+
     for (int i = 0; i < numberOfButtons; i++){
       checkBounce(debouncers[i], symbols[i], SendMediaKeys[i][0], SendMediaKeys[i][1]);
     }
   }
 }
 void configurerEEPROM(){
-  Serial.println("Configurer EEPROM");
+  Serial.println("Configurer Preferences");
   for(int y = 0; y < numberOfButtons; y++){
-      //dats[y] = EEPROM.read(y);
+    
+      dats[y] = preferences.getUInt(keys[y], 0);
       
       Serial.println(dats[y]);
     }
@@ -411,11 +434,10 @@ void handling(){
   for (int i = 0; i < numberOfButtons; i++){
     dats[i] = server.arg(arguments[i]).toInt();
     
-    //EEPROM.write(i, dats[i]);
+    preferences.putUInt(keys[i], dats[i]);
     
     Serial.println(dats[i]);
   }
-  //EEPROM.commit;
 
   mediaKeyOrSymbol();
 
@@ -434,16 +456,28 @@ void mediaKeyOrSymbol(){
   //Checks what symbol / mediakey is to be used
   Serial.println("mediaKeyOrSymbol...");
   for (int k = 0; k < numberOfButtons; k++)  {
-
+    Serial.print("Dats");
+    Serial.println(dats[k]);
+    Serial.println("---------------------");
     //if dats is greater than mapLength. Mediakeys are to be used instead.
     if (dats[k] >= mapLength){
       SendMediaKeys[k][0] = definedMediaKeys[dats[k] - mapLength][0];
       SendMediaKeys[k][1] = definedMediaKeys[dats[k] - mapLength][1];
       savedValues[savedValuesIndex] = descriptionMediaKeys[dats[k] - mapLength]; 
+      Serial.print("mediakeyValue ");
+      Serial.println(savedValues[k]);
+      Serial.println("---------------------");
       savedValuesIndex++;
     }else{
       symbols[k] = serverToHex[dats[k]].hexCode;
-      savedValues[k] = serverToHex[dats[k]].serverTxt;
+      savedValues[savedValuesIndex] = serverToHex[dats[k]].serverTxt;
+      Serial.print("Symbol ");
+      Serial.println(symbols[k]);
+      Serial.print("Value ");
+      Serial.println(savedValues[k]);
+
+      Serial.println("---------------------");
+      savedValuesIndex++;
     }
   }
 }

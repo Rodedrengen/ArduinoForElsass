@@ -2,6 +2,16 @@
 
 Preferences preferences;
 
+const char *liste[8]{
+    "stringDat0",
+    "stringDat1",
+    "stringDat2",
+    "stringDat3",
+    "stringDat4",
+    "stringDat5",
+    "stringDat6",
+    "stringDat7"};
+
 void setup()
 {
 
@@ -9,16 +19,22 @@ void setup()
     Serial.println();
 
     preferences.begin("my-app", false);
+    for (int i = 0; i < 8; i++)
+    {
+        preferences.getInt(liste[i], 0);
+    }
 
-    unsigned int counter = preferences.getUInt("counter", 0);
+    for (int k = 0; k < 8; k++)
+    {
+        Serial.println(liste[k]);
+       preferences.putInt(liste[k], k);
+    }
 
-    counter++;
-
-    // Print the counter to Serial Monitor
-    Serial.printf("Current counter value: %u\n", counter);
-
-    // Store the counter to the Preferences
-    preferences.putUInt("counter", counter);
+    for (int j = 0; j < 8; j++)
+    {
+        Serial.println(preferences.getInt(liste[j]));
+    }
+    
 
     // Close the Preferences
     preferences.end();
