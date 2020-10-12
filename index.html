@@ -1,0 +1,82 @@
+HTML(
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" http-equiv="Content-Type" content="width=device-width, initial-scale=1.0, charset=utf-8">
+    <title>Elsass</title>
+    <link rel="icon" href="data:;base64,=">
+    <style>
+        input[type=submit] {
+            width: 100%;
+            background-color: #4CAF50;
+            color: white;
+            padding: 14px 20px;
+            margin: 8px 0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        select {
+            margin-top: 4px;
+            margin-left: 100px;
+            width: 50%;
+        }
+
+        .select-selected {
+            background-color: DodgerBlue;
+        }
+
+        div {
+            max-width: 400px;
+            width: 100%;
+            margin: 0 auto;
+            position: relative;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="content"></div>
+</body>
+<script>var selected = ["LEFT_CTRL", "#", "1", "MUTE"]
+    var strings = ["a", "b", "c", "d", "e ", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "1",
+        "2", "3", "4", "5", "6", "7", "8", "9", "0", "!", "\"", "#", "/", "(", ")", "=", "?", "`", "^", "*", "-", "_", ".", ":", ";", ",", "<", ">", "|", "{", "}",
+        "[", "]", "@", "LEFT_CTRL", "LEFT_SHIFT", "LEFT_ALT", "LEFT_GUI", "RIGHT_CTRL", "RIGHT_SHIFT", "RIGHT_ALT",
+        "RIGHT_GUI", "UP_ARROW", "DOWN_ARROW", "LEFT_ARROW", "RIGHT_ARROW", "BACKSPACE", "TAB", "RETURN", "ESC",
+        "INSERT", "DELETE", "PAGE_UP", "PAGE_DOWN", "HOME", "END", "CAPS_LOCK", "F1", "F2", "F3", "F4",
+        "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12", "NEXT_TRACK", "PREVIOUS_TRACK", "STOP",
+        "PLAY_PAUSE", "MUTE", "VOLUME_UP", "VOLUME_DOWN", "WWW_HOME", "LOCAL_MACHINE_BROWSER", "CALCULATOR", "WWW_BOOKMARKS", "WWW_SEARCH",
+        "WWW_STOP", "WWW_BACK", "CONSUMER_CONTROL_CONFIGURATION", "EMAIL_READER"];
+
+    var k;
+    var i;
+    var text = "";
+
+    for (k = 0; k < 4; k++) {
+
+        text += "<form action=\"/action\" onsubmit=\"alert('Konfiguration komplet');\"><select name=\"stringDat";
+        text += k;
+        text += "\">";
+
+        for (i = 0; i < strings.length; i++) {
+            text += "<option value=\"";
+            text += i;
+            if (selected[k] == strings[i]) {
+                text += "\" selected=>";
+            } else {
+                text += "\">";
+            }
+            text += strings[i];
+            text += "</option>";
+        }
+        text += "</select>";
+    }
+
+    text += "<input type=\"submit\" value=\"Submit\"></form>";
+    document.getElementById("content").innerHTML = text;
+
+</script>
+
+</html>

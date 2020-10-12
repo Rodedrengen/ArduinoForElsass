@@ -50,7 +50,8 @@ void handling();
 void handle_NotFound();
 String sendHTML();
 void mediaKeyOrSymbol();
-void configurerEEPROM();
+void configurerPreferences();
+void createSelected();
 
 //Delay for the bouncers. 
 const unsigned long bounceDelay = 25;
@@ -100,7 +101,7 @@ const String descriptionMediaKeys[16]={
   "MEDIA_CONSUMER_CONTROL_CONFIGURATION",
   "MEDIA_EMAIL_READER"
 };
-//Saved values pulled from EEPROM
+//Saved values pulled from preferences
 String savedValues[8]{
   "",
   "",
@@ -112,6 +113,7 @@ String savedValues[8]{
   ""
 };
 
+//Used to save the current value to the right index of savedValues
 int savedValuesIndex = 0;
 
 //The decimal code and it's symbol to be send with BleKeyboard.write
@@ -284,19 +286,26 @@ WebServer server(80);
 //The string the response is stored in
 String response = "";
 
+//
+String selectedOnServer = "";
+
+//Do we need to confugre server?
 bool configureServer = false;
 
+//Setup preferences
 Preferences preferences;
 
 void setup(){
   //Begin serial communication on speed 115200
   Serial.begin(115200);
 
+  //Begin preferences
   preferences.begin("my-app", false);
 
   //Setup Wifi
   WiFi.softAP(ssid, password);
   WiFi.softAPConfig(local_ip, gateway, subnet);
+
   //To limit errors
   delay(100);
 
@@ -327,17 +336,19 @@ void setup(){
   //Config button
   pinMode(onOff, INPUT);
 
-  //Create the HTML response
-  response = sendHTML();
   //To limit errors
-  delay(1000);
+  delay(3000);
   
   //Server or EEPROM data
   configureServer = digitalRead(onOff);
 
   Serial.println(configureServer);
-  
-  configurerEEPROM();
+
+  //Get the lastest data from the preferences
+  configurerPreferences();
+
+  //Create the HTML response
+  response = sendHTML();
 
   //Total delay 3100 ms
 }
@@ -360,7 +371,7 @@ void loop(){
     }
   }
 }
-void configurerEEPROM(){
+void configurerPreferences(){
   Serial.println("Configurer Preferences");
   for(int y = 0; y < numberOfButtons; y++){
     
@@ -369,16 +380,18 @@ void configurerEEPROM(){
       Serial.println(dats[y]);
     }
     mediaKeyOrSymbol();
+    createSelected();
 }
 
 String sendHTML(){
   Serial.println("Send HTML");
   String ptr = R"HTML(<!DOCTYPE html><html><head><meta name="viewport" http-equiv="Content-Type"  content="width=device-width, initial-scale=1.0, charset=utf-8"> 
-<title>Elsass</title><link rel="icon" href="data:;base64,="><style>input[type=submit]{width: 100%;background-color:#4CAF50;color:white;
+<title>Elsass</title><link rel="icon" href="data:,"><style>input[type=submit]{width: 100%;background-color:#4CAF50;color:white;
 padding:14px 20px;margin: 8px 0;border: none;border-radius: 4px;cursor: pointer;}select{margin-top: 4px;margin-left:100px;width: 50%;
 }.select-selected {background-color: DodgerBlue;}div {max-width: 400px;width: 100%;margin: 0 auto;position: relative;} </style></head>
 <body><div id = "content"></div></body>
-<script>var selected = ["LEFT_CTRL","#","1","MUTE"]
+<script>var selected = )HTML";
+ptr += selectedOnServer + R"HTML( 
 var strings = ["a","b","c","d","e ","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z","1",
 "2","3","4","5","6","7","8","9","0","!","\"","#","/","(",")","=","?","`","^","*","-","_",".",":",";",",","<",">","|","{","}",
 "[","]","@","LEFT_CTRL","LEFT_SHIFT","LEFT_ALT","LEFT_GUI","RIGHT_CTRL","RIGHT_SHIFT","RIGHT_ALT",
@@ -424,7 +437,11 @@ var text="";
 void handle_OnConnect(){
   //Handling on connection
   Serial.println("On connect");
+  Serial.println(response.length());
+  //Serial.println(response);
+  server.setContentLength(response.length());
   server.send(200, "text/html", response);
+  //server.send(200,"text/html","hello world!");
 }
 void handling(){
   //Handles the form response
@@ -459,6 +476,7 @@ void mediaKeyOrSymbol(){
     Serial.print("Dats");
     Serial.println(dats[k]);
     Serial.println("---------------------");
+
     //if dats is greater than mapLength. Mediakeys are to be used instead.
     if (dats[k] >= mapLength){
       SendMediaKeys[k][0] = definedMediaKeys[dats[k] - mapLength][0];
@@ -504,4 +522,24 @@ void checkBounce(Bounce debouncer, uint8_t symbol, uint8_t MediaValue1, uint8_t 
       bleKeyboard.release(symbol);
     }
   }
+}
+void createSelected(){
+
+selectedOnServer = "[";
+
+  for(int i = 0; i < numberOfButtons; i++){
+    if(i == numberOfButtons - 1){
+      selectedOnServer += "\"";
+      selectedOnServer += savedValues[i];
+      selectedOnServer += "\"";
+    }else{
+      selectedOnServer += "\"";
+      selectedOnServer += savedValues[i];
+      selectedOnServer += "\",";
+    }
+  }
+  
+selectedOnServer += "]";
+
+Serial.println(selectedOnServer);
 }
