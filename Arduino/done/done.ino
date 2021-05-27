@@ -318,14 +318,11 @@ void setup(){
 
   //Begin the BLE keyboard/start advertising the keyboard
   bleKeyboard.begin();
-  Serial.println("Blekeyboard begun");
   //To limit errors
   delay(2000);
 
   //Start the server
   server.begin();
-  Serial.println("Server begun at:");
-  Serial.println(local_ip);
 
   //Button pins
   pinMode(btn33, INPUT);
@@ -341,8 +338,6 @@ void setup(){
   
   //Server or EEPROM data
   configureServer = digitalRead(onOff);
-
-  Serial.println(configureServer);
 
   //Get the lastest data from the preferences
   configurerPreferences();
@@ -372,19 +367,16 @@ void loop(){
   }
 }
 void configurerPreferences(){
-  Serial.println("Configurer Preferences");
   for(int y = 0; y < numberOfButtons; y++){
     
       dats[y] = preferences.getUInt(keys[y], 0);
       
-      Serial.println(dats[y]);
     }
     mediaKeyOrSymbol();
     createSelected();
 }
 
 String sendHTML(){
-  Serial.println("Send HTML");
   String ptr = R"HTML(<!DOCTYPE html><html><head><meta name="viewport" http-equiv="Content-Type"  content="width=device-width, initial-scale=1.0, charset=utf-8"> 
 <title>Elsass</title><link rel="icon" href="data:,"><style>input[type=submit]{width: 100%;background-color:#4CAF50;color:white;
 padding:14px 20px;margin: 8px 0;border: none;border-radius: 4px;cursor: pointer;}select{margin-top: 4px;margin-left:100px;width: 50%;
@@ -436,17 +428,12 @@ var text="";
 
 void handle_OnConnect(){
   //Handling on connection
-  Serial.println("On connect");
-  Serial.println(response.length());
-  Serial.println(response);
-  server.sendHeader("Connection","close");
   server.setContentLength(response.length());
   server.send(200, "text/html", response);
   
 }
 void handling(){
   //Handles the form response
-  Serial.println("Handling....");
 
   //converts http value to integer
   for (int i = 0; i < numberOfButtons; i++){
@@ -454,7 +441,6 @@ void handling(){
     
     preferences.putUInt(keys[i], dats[i]);
     
-    Serial.println(dats[i]);
   }
 
   mediaKeyOrSymbol();
@@ -466,36 +452,23 @@ void handling(){
 }
 void handle_NotFound(){
   //Handles not found errors. 
-  Serial.println("Handle not found");
   server.send(404, "text/plain", "Did not find anything");
 }
 
 void mediaKeyOrSymbol(){
   //Checks what symbol / mediakey is to be used
-  Serial.println("mediaKeyOrSymbol...");
   for (int k = 0; k < numberOfButtons; k++)  {
-    Serial.print("Dats");
-    Serial.println(dats[k]);
-    Serial.println("---------------------");
 
     //if dats is greater than mapLength. Mediakeys are to be used instead.
     if (dats[k] >= mapLength){
       SendMediaKeys[k][0] = definedMediaKeys[dats[k] - mapLength][0];
       SendMediaKeys[k][1] = definedMediaKeys[dats[k] - mapLength][1];
       savedValues[savedValuesIndex] = descriptionMediaKeys[dats[k] - mapLength]; 
-      Serial.print("mediakeyValue ");
-      Serial.println(savedValues[k]);
-      Serial.println("---------------------");
       savedValuesIndex++;
     }else{
       symbols[k] = serverToHex[dats[k]].hexCode;
       savedValues[savedValuesIndex] = serverToHex[dats[k]].serverTxt;
-      Serial.print("Symbol ");
-      Serial.println(symbols[k]);
-      Serial.print("Value ");
-      Serial.println(savedValues[k]);
 
-      Serial.println("---------------------");
       savedValuesIndex++;
     }
   }
@@ -504,10 +477,6 @@ void mediaKeyOrSymbol(){
 void checkBounce(Bounce debouncer, uint8_t symbol, uint8_t MediaValue1, uint8_t MediaValue2){
 
   uint8_t tempArr[2] = {MediaValue1, MediaValue2};
-  Serial.println("checkBounce");
-  Serial.print(tempArr[0]);
-  Serial.print(" ");
-  Serial.println(tempArr[1]);
 
   if (debouncer.rose()){
     if (symbol == 0){
@@ -542,5 +511,4 @@ selectedOnServer = "[";
   
 selectedOnServer += "]";
 
-Serial.println(selectedOnServer);
 }
